@@ -1,0 +1,21 @@
+// This is the example used by crate::slice::Slice; keep it in sync!
+// This is the example used by crate::annotation::Annotation; keep it in sync!
+
+    let x = vec![1];
+
+
+    let y = x;
+
+    x;
+
+/*
+error[E0382]: use of moved value: `x`
+ --> examples/moved_value.rs:4:5
+  |
+4 |     let x = vec![1];
+  |         - move occurs because `x` has type `std::vec::Vec<i32>`, which does not implement the `Copy` trait
+7 |     let y = x;
+  |             - value moved here
+9 |     x;
+  |     ^ value used here after move
+*/

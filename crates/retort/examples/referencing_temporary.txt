@@ -1,0 +1,51 @@
+// https://twitter.com/spacekookie/status/1183047194343067648
+
+/*
+error[E0515]: cannot return value referencing temporary value
+  --> examples/referencing_temporary.rs
+   |
+43 |         self.inner
+   |   ______^
+   |  |______|
+   | ||
+44 | ||          .lock()
+45 | ||          .expect("Failed to lock UserStore")
+   | ||____________________________________________- temporary value created here
+46 | |           .iter()
+...  |
+50 | |           })
+51 | |           .collect()
+   | |____________________^ returns a value referencing data owned by the current function
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        self.inner
+            .lock()
+            .expect("Failed to lock UserStore")
+            .iter()
+
+
+
+            })
+            .collect()
