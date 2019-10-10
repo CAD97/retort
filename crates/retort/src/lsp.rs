@@ -1,10 +1,10 @@
 use {
-    crate::{diagnostic::*, Span as _},
+    crate::diagnostic::*,
     lsp_types::{
         Diagnostic as LSPDiagnostic, DiagnosticRelatedInformation, DiagnosticSeverity,
         NumberOrString, PublishDiagnosticsParams, Url,
     },
-    std::{borrow::Borrow, collections::HashMap},
+    std::collections::HashMap,
 };
 
 impl Level {
@@ -18,14 +18,11 @@ impl Level {
     }
 }
 
-pub fn render<Span: crate::Span>(
+pub fn render<Span>(
     diagnostics: impl IntoIterator<Item = Diagnostic<Span>>,
     source: Option<String>,
     mut span_resolver: impl FnMut(Span) -> lsp_types::Location,
-) -> Vec<PublishDiagnosticsParams>
-where
-    Span::SourceHandle: Borrow<str>,
-{
+) -> Vec<PublishDiagnosticsParams> {
     let mut out: HashMap<Url, Vec<LSPDiagnostic>> = HashMap::new();
 
     for diagnostic in diagnostics {

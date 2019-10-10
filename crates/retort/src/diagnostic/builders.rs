@@ -1,7 +1,7 @@
 use super::*;
 use std::{fmt::Display, mem};
 
-impl<Span: crate::Span> Diagnostic<Span> {
+impl<Span> Diagnostic<Span> {
     pub fn build() -> DiagnosticBuilder<Span> {
         DiagnosticBuilder {
             primary: None,
@@ -20,7 +20,7 @@ pub struct DiagnosticBuilder<Span> {
     level: Option<Level>,
 }
 
-impl<Span: crate::Span> DiagnosticBuilder<Span> {
+impl<Span> DiagnosticBuilder<Span> {
     pub fn primary(&mut self, annotation: Annotation<Span>) -> &mut Self {
         self.primary = Some(annotation);
         self
@@ -57,7 +57,7 @@ impl<Span: crate::Span> DiagnosticBuilder<Span> {
     }
 }
 
-impl<Span: crate::Span> Annotation<Span> {
+impl<Span> Annotation<Span> {
     pub fn build() -> AnnotationBuilder<Span> {
         AnnotationBuilder {
             span: None,
@@ -72,7 +72,7 @@ pub struct AnnotationBuilder<Span> {
     message: String,
 }
 
-impl<Span: crate::Span> AnnotationBuilder<Span> {
+impl<Span> AnnotationBuilder<Span> {
     pub fn span(&mut self, span: impl Into<Span>) -> &mut Self {
         self.span = Some(span.into());
         self
