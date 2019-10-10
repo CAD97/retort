@@ -1,0 +1,14 @@
+[package]
+name = "retort"
+version = "0.1.0"
+edition = "2018"
+
+authors = [
+    "Brendan Zabarauskas <bjzaba@yahoo.com.au>",
+    "Christopher Durham <cad97@cad97.com>",
+    "Yehuda Katz <wycats@gmail.com>",
+    "Zibi Braniecki <gandalf@mozilla.com>",
+]
+
+[dependencies]
+lsp-types = "0.61.0"
