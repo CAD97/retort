@@ -1,0 +1,73 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+) -> Option<String> {
+    for ann in annotations {
+        match (ann.range.0, ann.range.1) {
+            (None, None) => continue,
+            (Some(start), Some(end)) if start > end_index => continue,
+            (Some(start), Some(end)) if start >= start_index => {
+                let label = if let Some(ref label) = ann.label {
+                    format!(" {}", label)
+                } else {
+                    String::from("")
+                };
+
+                return Some(format!(
+                    "{}{}{}",
+                    " ".repeat(start - start_index),
+                    "^".repeat(end - start),
+                    label
+                ));
+            }
+            _ => continue,
+        }
+    }
+}
