@@ -5,33 +5,34 @@ use std::{
 pub use termcolor::WriteColor;
 
 pub mod diagnostic;
-//pub mod lsp;
 pub mod renderer;
 pub mod style;
 
 pub trait Span: fmt::Debug + Copy {
-    // ideally, just use Self::OriginHandle::Owned instead
-    type OwnedOriginHandle: fmt::Debug + Clone + Borrow<Self::OriginHandle>;
-    type OriginHandle: ?Sized + fmt::Debug + ToOwned<Owned = Self::OwnedOriginHandle> + Eq;
+    type Origin: ?Sized + fmt::Debug + Eq;
 
     fn start(&self) -> usize;
     fn end(&self) -> usize;
     fn new(&self, start: usize, end: usize) -> Self;
-    fn origin(&self) -> &Self::OriginHandle;
+    fn origin(&self) -> &Self::Origin;
 }
 
 pub trait SpanResolver<Sp> {
-    type LineIterator: Iterator<Item = (usize, Sp)> + ExactSizeIterator;
-
-    // ideally, -> impl Iterator<Item=(usize, Sp)> + ExactSizeIterator + '_
-    fn lines_of(&mut self, span: Sp) -> Self::LineIterator;
+    fn first_line_of(&mut self, span: Sp) -> Option<SpannedLine<Sp>>;
+    fn next_line_of(&mut self, span: Sp, line: SpannedLine<Sp>) -> Option<SpannedLine<Sp>>;
     fn write_span(&mut self, w: &mut dyn WriteColor, span: Sp) -> io::Result<()>;
     fn write_origin(&mut self, w: &mut dyn io::Write, span: Sp) -> io::Result<()>;
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct SpannedLine<Sp> {
+    line_num: usize,
+    char_count: usize,
+    span: Sp,
+}
+
 impl Span for (usize, usize) {
-    type OwnedOriginHandle = ();
-    type OriginHandle = ();
+    type Origin = ();
 
     fn start(&self) -> usize {
         self.0
@@ -42,14 +43,13 @@ impl Span for (usize, usize) {
     fn new(&self, start: usize, end: usize) -> Self {
         (start, end)
     }
-    fn origin(&self) -> &Self::OriginHandle {
+    fn origin(&self) -> &Self::Origin {
         &()
     }
 }
 
-impl<Sp: Span<OriginHandle = (), OwnedOriginHandle = ()>> Span for (&'_ str, Sp) {
-    type OwnedOriginHandle = String;
-    type OriginHandle = str;
+impl<Sp: Span<Origin = ()>> Span for (&'_ str, Sp) {
+    type Origin = str;
 
     fn start(&self) -> usize {
         self.1.start()
@@ -60,7 +60,7 @@ impl<Sp: Span<OriginHandle = (), OwnedOriginHandle = ()>> Span for (&'_ str, Sp)
     fn new(&self, start: usize, end: usize) -> Self {
         (self.0, self.1.new(start, end))
     }
-    fn origin(&self) -> &Self::OriginHandle {
+    fn origin(&self) -> &Self::Origin {
         self.0
     }
 }
@@ -110,23 +110,36 @@ mod hidden {
     }
 }
 
+#[allow(clippy::or_fun_call)] // Span::end is an accessor
+fn slice_line_span<Sp: Span>(text: &str, span: Sp, start: usize) -> Option<SpannedLine<Sp>> {
+    let end = text[start..span.end()].find('\n').unwrap_or(span.end());
+    if start != end {
+        let line = &text[start..end];
+        let span = span.new(start, end);
+        let line_num = bytecount::count(text[..start].as_bytes(), b'\n') + 1;
+        let char_count = bytecount::num_chars(line.as_bytes());
+        Some(SpannedLine {
+            line_num,
+            char_count,
+            span,
+        })
+    } else {
+        None
+    }
+}
+
 impl<'a, Sp: Span> SpanResolver<Sp> for &'a str
 where
-    Sp::OriginHandle: fmt::Display,
+    Sp::Origin: fmt::Display,
 {
-    type LineIterator = hidden::SubSpanIterator<'a, Sp>;
-
-    fn lines_of(&mut self, span: Sp) -> Self::LineIterator {
+    fn first_line_of(&mut self, span: Sp) -> Option<SpannedLine<Sp>> {
         let start = self[..span.start()].rfind('\n').map_or(0, |i| i + 1);
-        let end = self[span.end()..].find('\n').map_or(0, |i| i + 1) + span.end();
-        #[allow(clippy::naive_bytecount)] // proof of concept
-        hidden::SubSpanIterator {
-            span: span.new(start, end),
-            text: &self[start..end],
-            line_num: bytecount::count(self[..span.start()].as_bytes(), b'\n') + 1, // one indexed
-            remaining_lines: bytecount::count(self[start..end].as_bytes(), b'\n')
-                + if self.ends_with('\n') { 0 } else { 1 },
-        }
+        slice_line_span(self, span, start)
+    }
+
+    fn next_line_of(&mut self, span: Sp, line: SpannedLine<Sp>) -> Option<SpannedLine<Sp>> {
+        let start = self[..line.span.end()].rfind('\n').map_or(0, |i| i + 1);
+        slice_line_span(self, span, start)
     }
 
     fn write_span(&mut self, w: &mut dyn WriteColor, span: Sp) -> io::Result<()> {

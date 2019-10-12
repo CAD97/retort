@@ -4,7 +4,7 @@ use {
         diagnostic::Diagnostic,
         renderer::line::{Line, RawLine, SourceLine},
         style::{Mark, Stylesheet},
-        Span, SpanResolver,
+        Span, SpanResolver, SpannedLine,
     },
     std::{borrow::Borrow, cmp, fmt, io},
     termcolor::WriteColor,
@@ -77,9 +77,60 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
             annotations.push(ann.borrow());
         }
 
-        for (line_num, line) in span_resolver.lines_of(primary_span) {
-            let line_length = unimplemented!();
-            unimplemented!();
+        let process = |SpannedLine {
+                           line_num,
+                           char_count,
+                           span,
+                       }: SpannedLine<Sp>| {
+            let mut annotations_here = vec![];
+            let mut marks = vec![];
+
+            annotations.retain(|ann| {
+                if span.start() <= ann.span.start() && ann.span.end() <= span.end() {
+                    // Annotation in this line
+                    annotations_here.push(*ann);
+                    false
+                } else if span.start() <= ann.span.start() && ann.span.start() <= span.end() {
+                    // Annotation starts in this line
+                    marks.push(Mark::Start);
+                    true
+                } else if ann.span.start() < span.start() && ann.span.end() < span.end() {
+                    // Annotation goes through this line
+                    marks.push(Mark::Continue);
+                    true
+                } else if ann.span.start() < span.start() && span.end() <= ann.span.end() {
+                    // Annotation ends on this line
+                    marks.push(Mark::End);
+                    annotations_here.push(*ann);
+                    false
+                } else {
+                    // Annotation starts on later line
+                    true
+                }
+            });
+
+            body.push(Line::Source {
+                line_num: Some(line_num),
+                marks,
+                line: SourceLine::Content(span),
+            });
+
+            for ann in annotations_here {
+                // FIXME: this is byte position
+                let start = if span.start() < ann.span.start() {
+                    ann.span.start() - span.start()
+                } else {
+                    0
+                };
+                unimplemented!()
+            }
+        };
+
+        if let Some(line) = span_resolver.first_line_of(primary_span) {
+            process(line);
+            while let Some(line) = span_resolver.next_line_of(primary_span, line) {
+                process(line);
+            }
         }
 
         List {
