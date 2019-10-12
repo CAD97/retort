@@ -77,7 +77,7 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
             annotations.push(ann.borrow());
         }
 
-        let process = |SpannedLine {
+        let mut process = |SpannedLine {
                            line_num,
                            char_count,
                            span,
@@ -88,7 +88,7 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
             annotations.retain(|ann| {
                 if span.start() <= ann.span.start() && ann.span.end() <= span.end() {
                     // Annotation in this line
-                    annotations_here.push(*ann);
+                    annotations_here.push(ann.clone()); // cloning borrowed data
                     false
                 } else if span.start() <= ann.span.start() && ann.span.start() <= span.end() {
                     // Annotation starts in this line
@@ -101,7 +101,7 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
                 } else if ann.span.start() < span.start() && span.end() <= ann.span.end() {
                     // Annotation ends on this line
                     marks.push(Mark::End);
-                    annotations_here.push(*ann);
+                    annotations_here.push(ann.clone()); // cloning borrowed data
                     false
                 } else {
                     // Annotation starts on later line

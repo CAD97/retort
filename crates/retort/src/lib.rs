@@ -24,7 +24,7 @@ pub trait SpanResolver<Sp> {
     fn write_origin(&mut self, w: &mut dyn io::Write, span: Sp) -> io::Result<()>;
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct SpannedLine<Sp> {
     line_num: usize,
     char_count: usize,
@@ -166,14 +166,61 @@ three
 four
 five
 six";
-    let span = (source, (0usize, source.len()));
-    let mut lines = source.lines_of(span);
-    assert_eq!(lines.len(), 6);
-    assert_eq!(lines.next(), Some((1, (source, (0, 3)))));
-    assert_eq!(lines.next(), Some((2, (source, (4, 7)))));
-    assert_eq!(lines.next(), Some((3, (source, (8, 13)))));
-    assert_eq!(lines.next(), Some((4, (source, (14, 18)))));
-    assert_eq!(lines.next(), Some((5, (source, (19, 23)))));
-    assert_eq!(lines.next(), Some((6, (source, (24, 27)))));
-    assert_eq!(lines.next(), None);
+    let span = ("example", (0usize, source.len()));
+    let line = source.first_line_of(span);
+    assert_eq!(
+        line,
+        Some(SpannedLine {
+            line_num: 1,
+            char_count: 3,
+            span: ("example", (0, 3)),
+        })
+    );
+    let line = source.next_line_of(span, line.unwrap());
+    assert_eq!(
+        line,
+        Some(SpannedLine {
+            line_num: 2,
+            char_count: 3,
+            span: ("example", (4, 7)),
+        })
+    );
+    let line = source.next_line_of(span, line.unwrap());
+    assert_eq!(
+        line,
+        Some(SpannedLine {
+            line_num: 3,
+            char_count: 5,
+            span: ("example", (8, 13)),
+        })
+    );
+    let line = source.next_line_of(span, line.unwrap());
+    assert_eq!(
+        line,
+        Some(SpannedLine {
+            line_num: 4,
+            char_count: 4,
+            span: ("example", (14, 18)),
+        })
+    );
+    let line = source.next_line_of(span, line.unwrap());
+    assert_eq!(
+        line,
+        Some(SpannedLine {
+            line_num: 5,
+            char_count: 4,
+            span: ("example", (19, 23)),
+        })
+    );
+    let line = source.next_line_of(span, line.unwrap());
+    assert_eq!(
+        line,
+        Some(SpannedLine {
+            line_num: 6,
+            char_count: 3,
+            span: ("example", (24, 27)),
+        })
+    );
+    let line = source.next_line_of(span, line.unwrap());
+    assert_eq!(line, None);
 }

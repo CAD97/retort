@@ -1,6 +1,6 @@
 use {
     lsp_types::{Location, Position, Range as LSPRange},
-    retort::{diagnostic::*, lsp},
+    retort::{diagnostic::*, renderer},
     std::ops::Range,
 };
 
@@ -18,36 +18,35 @@ fn main() {
         }
     };
 
-    let diagnostic = Diagnostic::build()
-        .primary(
-            Annotation::build()
-                .span(50..777)
-                .message("mismatched types")
-                .build(),
-        )
-        .code("E0308")
-        .level(Level::Err)
-        .secondary(
-            Annotation::build()
-                .span(55..69)
-                .message("expected `Option<String>` because of return type")
-                .build(),
-        )
-        .secondary(
-            Annotation::build()
-                .span(76..775)
-                .message("expected enum `std::option::Option`, found ()")
-                .build(),
-        )
-        .build();
+    let diagnostic = Diagnostic {
+        primary: Annotation {
+            span: (50, 777),
+            level: Level::Err,
+            message: "mismatched types".into(),
+        },
+        code: Some("E0308".into()),
+        secondary: vec![
+            Annotation {
+                span: (55, 69),
+                level: Level::Info,
+                message: "expected `Option<String>` because of return type".into(),
+            },
+            Annotation {
+                span: (76, 775),
+                level: Level::Err,
+                message: "expected enum `std::option::Option`, found ()".into(),
+            },
+        ]
+        .into(),
+    };
 
-    let out = lsp::render(
+    let out = renderer::lsp(
         Some(diagnostic),
-        Some("retort rustc example".to_string()),
-        |range: Range<usize>| {
+        Some("retort rustc example"),
+        |(start, end)| {
             Location::new(
                 "example:rustc_source.txt".parse().unwrap(),
-                LSPRange::new(position(range.start), position(range.end)),
+                LSPRange::new(position(start), position(end)),
             )
         },
     );
