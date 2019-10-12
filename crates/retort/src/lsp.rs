@@ -18,8 +18,8 @@ impl Level {
     }
 }
 
-pub fn render<Span>(
-    diagnostics: impl IntoIterator<Item = Diagnostic<Span>>,
+pub fn render<'a, Span: 'a>(
+    diagnostics: impl IntoIterator<Item = Diagnostic<'a, Span>>,
     source: Option<String>,
     mut span_resolver: impl FnMut(Span) -> lsp_types::Location,
 ) -> Vec<PublishDiagnosticsParams> {
@@ -29,17 +29,17 @@ pub fn render<Span>(
         let location = span_resolver(diagnostic.primary.span);
         out.entry(location.uri).or_default().push(LSPDiagnostic {
             range: location.range,
-            severity: diagnostic.level.map(Level::as_lsp),
-            code: diagnostic.code.map(NumberOrString::String),
+            severity: Some(diagnostic.level.as_lsp()),
+            code: diagnostic.code.map(|s| NumberOrString::String(s.to_string())),
             source: source.clone(),
-            message: diagnostic.primary.message,
+            message: diagnostic.primary.message.to_string(),
             related_information: Some(
                 diagnostic
                     .secondary
                     .into_iter()
                     .map(|diagnostic| DiagnosticRelatedInformation {
                         location: span_resolver(diagnostic.span),
-                        message: diagnostic.message,
+                        message: diagnostic.message.to_string(),
                     })
                     .collect(),
             ),

@@ -12,3 +12,6 @@ authors = [
 
 [dependencies]
 lsp-types = "0.61.0"
+termcolor = "1.0.5"
+scopeguard = "1.0.0"
+bytecount = "0.6.0"
