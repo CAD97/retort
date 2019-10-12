@@ -4,7 +4,9 @@ use {
     termcolor::WriteColor,
 };
 
+#[cfg(feature = "lsp-types")]
 mod lsp;
+#[cfg(feature = "lsp-types")]
 pub use lsp::render as lsp;
 
 mod line;
