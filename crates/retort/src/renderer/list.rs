@@ -21,17 +21,16 @@ where
     }
 }
 
-#[derive(Debug)]
-pub(super) struct List<'a, 'b, Sp: Span, R: SpanResolver<Sp>> {
+pub(super) struct List<'a, 'b, Sp: Span> {
     body: Vec<Line<'a, Sp>>,
-    span_resolver: &'b mut R,
+    span_resolver: &'b mut dyn SpanResolver<Sp>,
 }
 
-impl<Sp: Span, R: SpanResolver<Sp>> List<'_, '_, Sp, R> {
+impl<Sp: Span> List<'_, '_, Sp> {
     pub(super) fn write(
         &mut self,
-        w: &mut impl WriteColor,
-        style: &mut impl Stylesheet,
+        w: &mut dyn WriteColor,
+        style: &mut dyn Stylesheet,
     ) -> io::Result<()> {
         let line_num_width = self
             .body
@@ -53,8 +52,11 @@ impl<Sp: Span, R: SpanResolver<Sp>> List<'_, '_, Sp, R> {
 }
 
 // FIXME: Calculating `line_num_width`/`marks_width` AOT might eliminate this collection step
-impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
-    pub(super) fn new(diagnostic: &'a Diagnostic<'a, Sp>, span_resolver: &'b mut R) -> Self {
+impl<'a, 'b, Sp: Span> List<'a, 'b, Sp> {
+    pub(super) fn new(
+        diagnostic: &'a Diagnostic<'a, Sp>,
+        span_resolver: &'b mut dyn SpanResolver<Sp>,
+    ) -> Self {
         let mut body = Vec::<Line<'a, Sp>>::new();
 
         let primary_span = diagnostic.primary.span;

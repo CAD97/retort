@@ -1,5 +1,5 @@
+use termcolor::{Color, ColorSpec};
 use {crate::diagnostic::Level, std::io, termcolor::WriteColor};
-use termcolor::{ColorSpec, Color};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Mark {
@@ -39,7 +39,9 @@ impl Stylesheet for TestStyle {
     fn set_style(&mut self, w: &mut dyn WriteColor, style: Style) -> io::Result<()> {
         match style {
             Style::Diagnostic(Level::Err) => w.set_color(ColorSpec::new().set_fg(Some(Color::Red))),
-            Style::Diagnostic(Level::Warn) => w.set_color(ColorSpec::new().set_fg(Some(Color::Yellow))),
+            Style::Diagnostic(Level::Warn) => {
+                w.set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
+            }
             Style::TitleLine => w.set_color(ColorSpec::new().set_bold(true)),
             Style::LineNum => w.set_color(ColorSpec::new().set_fg(Some(Color::Cyan))),
             _ => w.reset(),

@@ -8,9 +8,9 @@ mod line;
 mod list;
 
 pub fn render<'a, Sp: Span>(
-    w: &mut impl WriteColor,
-    stylesheet: &mut impl Stylesheet,
-    span_resolver: &mut impl SpanResolver<Sp>,
+    w: &mut dyn WriteColor,
+    stylesheet: &mut dyn Stylesheet,
+    span_resolver: &mut dyn SpanResolver<Sp>,
     diagnostic: &'a Diagnostic<'a, Sp>,
 ) -> io::Result<()> {
     let mut w = scopeguard::guard(w, |w| drop(w.reset()));

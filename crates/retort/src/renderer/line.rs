@@ -4,7 +4,7 @@ use {
         style::{Mark, Style, Stylesheet},
         Span, SpanResolver,
     },
-    std::io,
+    std::{fmt, io},
     termcolor::WriteColor,
 };
 
@@ -23,9 +23,9 @@ pub(super) enum Line<'a, Sp: Span> {
 impl<Sp: Span> Line<'_, Sp> {
     pub(super) fn write(
         &self,
-        w: &mut impl WriteColor,
-        style: &mut impl Stylesheet,
-        span_resolver: &mut impl SpanResolver<Sp>,
+        w: &mut dyn WriteColor,
+        style: &mut dyn Stylesheet,
+        span_resolver: &mut dyn SpanResolver<Sp>,
         line_num_width: usize,
     ) -> io::Result<()> {
         match self {
@@ -67,8 +67,8 @@ impl<Sp: Span> SourceLine<'_, Sp> {
     pub(super) fn write(
         &self,
         w: &mut dyn WriteColor,
-        style: &mut impl Stylesheet,
-        span_resolver: &mut impl SpanResolver<Sp>,
+        style: &mut dyn Stylesheet,
+        span_resolver: &mut dyn SpanResolver<Sp>,
     ) -> io::Result<()> {
         match self {
             SourceLine::Content(span) => {
@@ -108,16 +108,41 @@ pub(super) enum RawLine<'a, Sp: Span> {
 impl<Sp: Span> RawLine<'_, Sp> {
     pub(super) fn write(
         &self,
-        w: &mut impl WriteColor,
-        style: &mut impl Stylesheet,
-        span_resolver: &mut impl SpanResolver<Sp>,
+        w: &mut dyn WriteColor,
+        style: &mut dyn Stylesheet,
+        span_resolver: &mut dyn SpanResolver<Sp>,
         line_num_width: usize,
     ) -> io::Result<()> {
+        struct EraseColor<'a>(&'a mut dyn WriteColor);
+        impl io::Write for EraseColor<'_> {
+            fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+                self.0.write(buf)
+            }
+            fn write_vectored(&mut self, bufs: &[io::IoSlice<'_>]) -> io::Result<usize> {
+                self.0.write_vectored(bufs)
+            }
+            fn flush(&mut self) -> io::Result<()> {
+                self.0.flush()
+            }
+            fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+                self.0.write_all(buf)
+            }
+            fn write_fmt(&mut self, fmt: fmt::Arguments<'_>) -> io::Result<()> {
+                self.0.write_fmt(fmt)
+            }
+            fn by_ref(&mut self) -> &mut Self
+            where
+                Self: Sized,
+            {
+                self
+            }
+        }
+
         match self {
             RawLine::Origin(span) => {
                 style.set_style(w, Style::OriginLine)?;
                 write!(w, "{:>1$}", "", line_num_width)?;
-                span_resolver.write_origin(w, *span)?;
+                span_resolver.write_origin(&mut EraseColor(w), *span)?;
                 style.set_style(w, Style::Base)?;
                 writeln!(w)?;
             }
