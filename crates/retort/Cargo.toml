@@ -11,12 +11,6 @@ authors = [
 ]
 
 [dependencies]
-lsp-types = { version = "0.61.0", optional = true }
 termcolor = "1.0.5"
 scopeguard = "1.0.0"
 bytecount = "0.6.0"
-
-[[example]]
-name = "rustc"
-path = "examples/rustc.rs"
-required-features = ["lsp-types"]

@@ -1,7 +1,4 @@
-use std::{
-    borrow::{Borrow, ToOwned},
-    fmt, io,
-};
+use std::{fmt, io};
 pub use termcolor::WriteColor;
 
 pub mod diagnostic;
@@ -112,7 +109,9 @@ mod hidden {
 
 #[allow(clippy::or_fun_call)] // Span::end is an accessor
 fn slice_line_span<Sp: Span>(text: &str, span: Sp, start: usize) -> Option<SpannedLine<Sp>> {
-    let end = text[start..span.end()].find('\n').unwrap_or(span.end());
+    let end = text[start..span.end()]
+        .find('\n')
+        .map_or(span.end(), |i| i + start);
     if start != end {
         let line = &text[start..end];
         let span = span.new(start, end);
@@ -138,7 +137,7 @@ where
     }
 
     fn next_line_of(&mut self, span: Sp, line: SpannedLine<Sp>) -> Option<SpannedLine<Sp>> {
-        let start = self[..line.span.end()].rfind('\n').map_or(0, |i| i + 1);
+        let start = self[line.span.end()..].find('\n').map_or(0, |i| i + 1) + line.span.end();
         slice_line_span(self, span, start)
     }
 

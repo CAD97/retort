@@ -4,7 +4,7 @@ use {
         style::{Mark, Style, Stylesheet},
         Span, SpanResolver,
     },
-    std::{borrow::Borrow, io},
+    std::io,
     termcolor::WriteColor,
 };
 

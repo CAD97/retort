@@ -1,4 +1,3 @@
-use crate::diagnostic::Annotation;
 use {
     crate::{
         diagnostic::Diagnostic,
@@ -6,9 +5,21 @@ use {
         style::{Mark, Stylesheet},
         Span, SpanResolver, SpannedLine,
     },
-    std::{borrow::Borrow, cmp, fmt, io},
+    std::{borrow::Cow, cmp, io},
     termcolor::WriteColor,
 };
+
+#[inline(always)]
+#[allow(clippy::ptr_arg)]
+fn get_borrow<'a, T>(cow: &Cow<'a, T>) -> &'a T
+where
+    T: 'a + ToOwned + ?Sized,
+{
+    match cow {
+        &Cow::Borrowed(t) => t,
+        Cow::Owned(_) => unreachable!(),
+    }
+}
 
 #[derive(Debug)]
 pub(super) struct List<'a, 'b, Sp: Span, R: SpanResolver<Sp>> {
@@ -39,7 +50,7 @@ impl<Sp: Span, R: SpanResolver<Sp>> List<'_, '_, Sp, R> {
 // FIXME: Calculating `line_num_width`/`marks_width` AOT might eliminate this collection step
 impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
     pub(super) fn new(diagnostic: &'a Diagnostic<'a, Sp>, span_resolver: &'b mut R) -> Self {
-        let mut body = Vec::new();
+        let mut body = Vec::<Line<'a, Sp>>::new();
 
         let primary_span = diagnostic.primary.span;
         let origin = diagnostic.primary.span.origin();
@@ -77,11 +88,7 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
             annotations.push(ann.borrow());
         }
 
-        let mut process = |SpannedLine {
-                           line_num,
-                           char_count,
-                           span,
-                       }: SpannedLine<Sp>| {
+        let mut process = |SpannedLine { line_num, span, .. }: SpannedLine<Sp>| {
             let mut annotations_here = vec![];
             let mut marks = vec![];
 
@@ -122,13 +129,27 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
                 } else {
                     0
                 };
-                unimplemented!()
+                let marks = if ann.span.start() < span.start() {
+                    vec![Mark::End]
+                } else {
+                    vec![]
+                };
+                body.push(Line::Source {
+                    line_num: None,
+                    marks,
+                    line: SourceLine::Annotation {
+                        message: get_borrow(&ann.message), // cloning borrowed data
+                        level: ann.level,
+                        underline: (start, ann.span.end() - span.start()),
+                    },
+                })
             }
         };
 
-        if let Some(line) = span_resolver.first_line_of(primary_span) {
+        if let Some(mut line) = span_resolver.first_line_of(primary_span) {
             process(line);
-            while let Some(line) = span_resolver.next_line_of(primary_span, line) {
+            while let Some(next) = span_resolver.next_line_of(primary_span, line) {
+                line = next;
                 process(line);
             }
         }
