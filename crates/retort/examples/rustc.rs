@@ -30,5 +30,5 @@ fn main() -> io::Result<()> {
     };
 
     let mut w = StandardStream::stdout(ColorChoice::Auto);
-    render(&mut w, &mut style::NoStyle, &mut source, &diagnostic)
+    render(&mut w, &mut style::TestStyle, &mut source, &diagnostic)
 }

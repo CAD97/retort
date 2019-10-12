@@ -1,4 +1,5 @@
 use {crate::diagnostic::Level, std::io, termcolor::WriteColor};
+use termcolor::{ColorSpec, Color};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Mark {
@@ -32,13 +33,20 @@ pub trait Stylesheet {
     ) -> io::Result<()>;
 }
 
-pub struct NoStyle;
+pub struct TestStyle;
 
-impl Stylesheet for NoStyle {
-    fn set_style(&mut self, _w: &mut dyn WriteColor, _style: Style) -> io::Result<()> {
-        Ok(())
+impl Stylesheet for TestStyle {
+    fn set_style(&mut self, w: &mut dyn WriteColor, style: Style) -> io::Result<()> {
+        match style {
+            Style::Diagnostic(Level::Err) => w.set_color(ColorSpec::new().set_fg(Some(Color::Red))),
+            Style::Diagnostic(Level::Warn) => w.set_color(ColorSpec::new().set_fg(Some(Color::Yellow))),
+            Style::TitleLine => w.set_color(ColorSpec::new().set_bold(true)),
+            Style::LineNum => w.set_color(ColorSpec::new().set_fg(Some(Color::Cyan))),
+            _ => w.reset(),
+        }
     }
     fn write_marks(&mut self, w: &mut dyn WriteColor, marks: &[Mark]) -> io::Result<()> {
+        w.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
         for mark in marks {
             match mark {
                 Mark::None => write!(w, " ")?,
@@ -50,6 +58,7 @@ impl Stylesheet for NoStyle {
         Ok(())
     }
     fn write_divider(&mut self, w: &mut dyn WriteColor) -> io::Result<()> {
+        w.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
         write!(w, " | ")
     }
     fn write_underline(
@@ -58,6 +67,7 @@ impl Stylesheet for NoStyle {
         _level: Level,
         len: usize,
     ) -> io::Result<()> {
+        w.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
         for _ in 0..len {
             write!(w, "-")?;
         }

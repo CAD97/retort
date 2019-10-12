@@ -112,7 +112,7 @@ fn slice_line_span<Sp: Span>(text: &str, span: Sp, start: usize) -> Option<Spann
     let end = text[start..span.end()]
         .find('\n')
         .map_or(span.end(), |i| i + start);
-    if start != end {
+    if end < span.end() {
         let line = &text[start..end];
         let span = span.new(start, end);
         let line_num = bytecount::count(text[..start].as_bytes(), b'\n') + 1;

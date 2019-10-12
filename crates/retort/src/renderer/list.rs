@@ -101,13 +101,13 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
                     // Annotation starts in this line
                     marks.push(Mark::Start);
                     true
-                } else if ann.span.start() < span.start() && ann.span.end() < span.end() {
+                } else if ann.span.start() < span.start() && span.end() < ann.span.end() {
                     // Annotation goes through this line
                     marks.push(Mark::Continue);
                     true
-                } else if ann.span.start() < span.start() && span.end() <= ann.span.end() {
+                } else if ann.span.start() < span.start() && ann.span.end() <= span.end() {
                     // Annotation ends on this line
-                    marks.push(Mark::End);
+                    marks.push(Mark::Continue);
                     annotations_here.push(ann.clone()); // cloning borrowed data
                     false
                 } else {
