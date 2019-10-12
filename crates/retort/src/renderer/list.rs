@@ -5,7 +5,7 @@ use {
         style::{Mark, Stylesheet},
         Span, SpanResolver, SpannedLine,
     },
-    std::{borrow::Cow, cmp, io},
+    std::{borrow::Cow, io},
     termcolor::WriteColor,
 };
 
@@ -33,13 +33,18 @@ impl<Sp: Span, R: SpanResolver<Sp>> List<'_, '_, Sp, R> {
         w: &mut impl WriteColor,
         style: &mut impl Stylesheet,
     ) -> io::Result<()> {
-        let line_num_width = self.body.iter().fold(1, |max, line| match line {
-            Line::Source {
-                line_num: Some(line_num),
-                ..
-            } => cmp::max(log10(*line_num), max),
-            _ => max,
-        });
+        let line_num_width = self
+            .body
+            .iter()
+            .map(|line| match line {
+                Line::Source {
+                    line_num: Some(line_num),
+                    ..
+                } => log10(*line_num),
+                _ => 1,
+            })
+            .max()
+            .unwrap_or(1);
         for line in &self.body {
             line.write(w, style, self.span_resolver, line_num_width)?;
         }
@@ -151,6 +156,27 @@ impl<'a, 'b, Sp: Span, R: SpanResolver<Sp>> List<'a, 'b, Sp, R> {
             while let Some(next) = span_resolver.next_line_of(primary_span, line) {
                 line = next;
                 process(line);
+            }
+        }
+
+        let max_marks = body
+            .iter()
+            .map(|line| match line {
+                Line::Source { marks, .. } => marks.len(),
+                Line::Raw { .. } => 0,
+            })
+            .max()
+            .unwrap_or(0);
+
+        for line in &mut body {
+            match line {
+                Line::Source { marks, .. } => {
+                    // FIXME: this is horribly inefficient
+                    while marks.len() < max_marks {
+                        marks.insert(0, Mark::None);
+                    }
+                }
+                _ => {}
             }
         }
 
