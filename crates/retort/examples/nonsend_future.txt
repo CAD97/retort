@@ -1,0 +1,46 @@
+// https://blog.rust-lang.org/inside-rust/2019/10/11/AsyncAwait-Not-Send-Error-Improvements.html
+
+use std::sync::{Mutex, MutexGuard};
+
+fn is_send<T: Send>(t: T) {
+
+}
+
+async fn foo() {
+    bar(&Mutex::new(22)).await
+}
+
+async fn bar(x: &Mutex<u32>) {
+    let g = x.lock().unwrap();
+    baz().await
+}
+
+async fn baz() {
+
+}
+
+fn main() {
+    is_send(foo());
+}
+
+/*
+error[E0277]: `std::sync::MutexGuard<'_, u32>` cannot be sent between threads safely
+  --> examples/nonsend_future.rs:23:5
+   |
+5  | fn is_send<T: Send>(t: T) {
+   |    -------    ---- required by this bound in `is_send`
+...
+23 |     is_send(foo());
+   |     ^^^^^^^ `std::sync::MutexGuard<'_, u32>` cannot be sent between threads safely
+   |
+   = help: within `impl std::future::Future`, the trait `std::marker::Send` is not implemented for `std::sync::MutexGuard<'_, u32>`
+note: future does not implement `std::marker::Send` as this value is used across an await
+  --> examples/nonsend_future.rs:15:3
+   |
+14 |   let g = x.lock().unwrap();
+   |       - has type `std::sync::MutexGuard<'_, u32>`
+15 |   baz().await;
+   |   ^^^^^^^^^^^ await occurs here, with `g` maybe used later
+16 | }
+   | - `g` is later dropped here
+*/
