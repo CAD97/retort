@@ -1,25 +1,13 @@
-#[cfg(feature = "syntect")]
-use syntect::highlighting::Style as SyntectStyle;
 use {
     crate::{Level, Mark},
     std::io,
     termcolor::WriteColor,
 };
 
-mod highlighting;
-#[cfg(feature = "syntect")]
-pub use highlighting::apply_syntect_style;
-pub use highlighting::SyntaxHighlighter;
+mod rustc;
+pub use rustc::Rustc;
 
 pub trait Stylesheet {
-    /// Get the syntect [`Highlighter`], if there is one.
-    /// This should not return `Some` unless the syntect feature is enabled.
-    /// This might return `None` even with the syntect feature enabled,
-    /// if the stylesheet does not have support for syntect highlighting.
-    ///
-    ///   [`Highlighter`]: <https://docs.rs/syntect/3/syntect/highlighting/struct.Highlighter.html>
-    fn highlighter(&self) -> Option<SyntaxHighlighter<'_>>;
-
     /// Set the appropriate style on the sink.
     fn set_style(&mut self, w: &mut dyn WriteColor, style: Style) -> io::Result<()>;
 
@@ -54,10 +42,6 @@ pub enum Style {
     OriginIndicator,
     /// Styling for the origin path.
     Origin,
-    /// Styling for code, using syntect themes.
-    #[cfg(feature = "syntect")]
-    #[cfg_attr(doc, doc(cfg(feature = "syntect")))]
-    Syntect(SyntectStyle),
     #[doc(hidden)]
     NonExhaustive,
 }

@@ -29,9 +29,7 @@ pub(super) enum Line<'a, Sp> {
         level: Level,
     },
     #[allow(dead_code)]
-    Fold {
-        marks: Vec<Mark>,
-    },
+    Fold { marks: Vec<Mark> },
 }
 
 impl<Sp: Span> Line<'_, Sp> {
@@ -62,7 +60,9 @@ impl<Sp: Span> Line<'_, Sp> {
             Line::Origin { file, pos } => {
                 style.set_style(w, Style::OriginIndicator)?;
                 write!(w, "{:>1$}", "", line_num_width)?;
-                write!(w, "--> {}", file)?;
+                write!(w, "--> ")?;
+                style.set_style(w, Style::Origin)?;
+                write!(w, "{}", file)?;
                 if let Some((line, col)) = pos {
                     write!(w, ":{}", line)?;
                     if let Some(col) = col {
@@ -127,6 +127,7 @@ impl<Sp: Span> SourceLine<'_, Sp> {
     ) -> io::Result<()> {
         match self {
             SourceLine::Content { span } => {
+                style.set_style(w, Style::Base)?;
                 resolver.write_span(w, style, span)?;
             }
             SourceLine::Annotation {

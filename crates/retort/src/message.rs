@@ -34,8 +34,8 @@ pub enum Level {
 impl fmt::Display for Level {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Level::Error => f.write_str("err"),
-            Level::Warning => f.write_str("warn"),
+            Level::Error => f.write_str("error"),
+            Level::Warning => f.write_str("warning"),
             Level::Information => f.write_str("info"),
             Level::Hint => f.write_str("hint"),
         }

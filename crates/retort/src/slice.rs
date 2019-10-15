@@ -25,7 +25,7 @@ use crate::DebugAndDisplay;
 /// ```
 /// # use retort::*;
 /// # let line4 = 0..0; let line7 = 0..0; let line9 = 0..0;
-/// let snippets = &[
+/// let slices = &[
 ///     Slice {
 ///         span: line4,
 ///         origin: Some(Origin {
