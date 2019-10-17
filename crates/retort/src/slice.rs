@@ -72,6 +72,6 @@ pub enum Spacing {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Origin<'a> {
-    pub file: &'a dyn DebugAndDisplay,
+    pub file: &'a str,
     pub pos: Option<(usize, Option<usize>)>,
 }

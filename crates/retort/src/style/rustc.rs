@@ -10,7 +10,7 @@ use {
 pub struct Rustc;
 
 impl Stylesheet for Rustc {
-    fn set_style(&mut self, w: &mut dyn WriteColor, style: Style) -> io::Result<()> {
+    fn set_style(&mut self, w: &mut impl WriteColor, style: Style) -> io::Result<()> {
         match style {
             Style::Level(Level::Error) => w.set_color(ColorSpec::new().set_fg(Some(Color::Red))),
             Style::Level(Level::Warning) => {
@@ -28,7 +28,7 @@ impl Stylesheet for Rustc {
         }
     }
 
-    fn write_marks(&mut self, w: &mut dyn WriteColor, marks: &[Mark]) -> io::Result<()> {
+    fn write_marks(&mut self, w: &mut impl WriteColor, marks: &[Mark]) -> io::Result<()> {
         for mark in marks {
             self.set_style(w, Style::Level(mark.level))?;
             write!(w, "{}", mark.kind.as_ascii())?;
@@ -36,7 +36,7 @@ impl Stylesheet for Rustc {
         Ok(())
     }
 
-    fn write_note_indicator(&mut self, w: &mut dyn WriteColor, level: Level) -> io::Result<()> {
+    fn write_note_indicator(&mut self, w: &mut impl WriteColor, level: Level) -> io::Result<()> {
         w.set_color(ColorSpec::new().set_fg(Some(Color::Cyan)))?;
         write!(w, "=")?;
         w.set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true))?;
@@ -44,7 +44,7 @@ impl Stylesheet for Rustc {
         Ok(())
     }
 
-    fn underline(&mut self, w: &mut dyn WriteColor, level: Level, len: usize) -> io::Result<()> {
+    fn underline(&mut self, w: &mut impl WriteColor, level: Level, len: usize) -> io::Result<()> {
         self.set_style(w, Style::Level(level))?;
         let ch = match level {
             Level::Error | Level::Warning => '^',

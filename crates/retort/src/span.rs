@@ -38,8 +38,8 @@ pub trait SpanResolver<Sp> {
     /// Style can be customized manually or by proxying through the stylesheet.
     fn write_span(
         &mut self,
-        w: &mut dyn WriteColor,
-        stylesheet: &mut dyn Stylesheet,
+        w: &mut impl WriteColor,
+        stylesheet: &mut impl Stylesheet,
         span: &Sp,
     ) -> io::Result<()>;
 
@@ -86,8 +86,8 @@ impl Span for ops::Range<usize> {
 impl SpanResolver<ops::Range<usize>> for &'_ str {
     fn write_span(
         &mut self,
-        w: &mut dyn WriteColor,
-        _stylesheet: &mut dyn Stylesheet,
+        w: &mut impl WriteColor,
+        _stylesheet: &mut impl Stylesheet,
         span: &ops::Range<usize>,
     ) -> io::Result<()> {
         write!(w, "{}", &self[span.start..span.end])

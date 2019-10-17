@@ -11,10 +11,10 @@ mod line;
 mod list;
 
 pub fn render<'a, Sp: Span>(
-    w: &mut dyn WriteColor,
+    w: &mut impl WriteColor,
     snippets: &'a [Snippet<'a, Sp>],
-    style: &'a mut dyn Stylesheet,
-    resolver: &'a mut dyn SpanResolver<Sp>,
+    style: &'a mut impl Stylesheet,
+    resolver: &'a mut impl SpanResolver<Sp>,
 ) -> io::Result<()> {
     let mut w = scopeguard::guard(w, |w| drop(w.reset()));
     style.set_style(&mut *w, Style::Base)?;

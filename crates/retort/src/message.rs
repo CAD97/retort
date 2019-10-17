@@ -2,19 +2,19 @@ use std::fmt;
 
 /// Trait to create trait objects with both `Debug` and `Display` capability.
 pub trait DebugAndDisplay: fmt::Debug + fmt::Display {
-    fn as_debug(&mut self) -> &mut dyn fmt::Debug;
-    fn as_display(&mut self) -> &mut dyn fmt::Display;
+//    fn as_debug(&mut self) -> &mut impl fmt::Debug;
+//    fn as_display(&mut self) -> &mut impl fmt::Display;
 }
 
 #[rustfmt::skip]
 impl<D: fmt::Debug + fmt::Display> DebugAndDisplay for D {
-    fn as_debug(&mut self) -> &mut dyn fmt::Debug { self }
-    fn as_display(&mut self) -> &mut dyn fmt::Display { self }
+//    fn as_debug(&mut self) -> &mut impl fmt::Debug { self }
+//    fn as_display(&mut self) -> &mut impl fmt::Display { self }
 }
 
 #[derive(Debug, Copy, Clone)]
 pub struct Message<'a> {
-    pub text: &'a dyn DebugAndDisplay,
+    pub text: &'a str,
     pub level: Level,
 }
 

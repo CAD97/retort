@@ -11,12 +11,12 @@ use {
 #[derive(Debug, Clone)]
 pub(super) enum Line<'a, Sp> {
     Title {
-        text: &'a dyn DebugAndDisplay,
+        text: &'a str,
         level: Level,
-        code: Option<&'a dyn DebugAndDisplay>,
+        code: Option<&'a str>,
     },
     Origin {
-        file: &'a dyn DebugAndDisplay,
+        file: &'a str,
         pos: Option<(usize, Option<usize>)>,
     },
     Source {
@@ -25,7 +25,7 @@ pub(super) enum Line<'a, Sp> {
         line: SourceLine<'a, Sp>,
     },
     Note {
-        text: &'a dyn DebugAndDisplay,
+        text: &'a str,
         level: Level,
     },
     #[allow(dead_code)]
@@ -35,9 +35,9 @@ pub(super) enum Line<'a, Sp> {
 impl<Sp: Span> Line<'_, Sp> {
     pub(super) fn write(
         &self,
-        w: &mut dyn WriteColor,
-        style: &mut dyn Stylesheet,
-        resolver: &mut dyn SpanResolver<Sp>,
+        w: &mut impl WriteColor,
+        style: &mut impl Stylesheet,
+        resolver: &mut impl SpanResolver<Sp>,
         line_num_width: usize,
         max_marks: usize,
     ) -> io::Result<()> {
@@ -111,7 +111,7 @@ pub(super) enum SourceLine<'a, Sp> {
         span: Sp,
     },
     Annotation {
-        text: &'a dyn DebugAndDisplay,
+        text: &'a str,
         level: Level,
         underline: Range<usize>,
     },
@@ -121,9 +121,9 @@ pub(super) enum SourceLine<'a, Sp> {
 impl<Sp: Span> SourceLine<'_, Sp> {
     pub(super) fn write(
         &self,
-        w: &mut dyn WriteColor,
-        style: &mut dyn Stylesheet,
-        resolver: &mut dyn SpanResolver<Sp>,
+        w: &mut impl WriteColor,
+        style: &mut impl Stylesheet,
+        resolver: &mut impl SpanResolver<Sp>,
     ) -> io::Result<()> {
         match self {
             SourceLine::Content { span } => {

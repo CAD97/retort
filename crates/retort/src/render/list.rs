@@ -20,7 +20,7 @@ pub(super) struct AnnotatedLines<'a, Sp: Span> {
 impl<'a, Sp: Span> AnnotatedLines<'a, Sp> {
     pub(super) fn new(
         snippets: &'a [Snippet<'a, Sp>],
-        resolver: &'_ mut dyn SpanResolver<Sp>,
+        resolver: &'_ mut impl SpanResolver<Sp>,
     ) -> Self {
         let mut body: Vec<Line<'a, Sp>> = Vec::new();
 
@@ -174,9 +174,9 @@ impl<'a, Sp: Span> AnnotatedLines<'a, Sp> {
 impl<Sp: Span> AnnotatedLines<'_, Sp> {
     pub(super) fn write(
         &mut self,
-        w: &mut dyn WriteColor,
-        style: &mut dyn Stylesheet,
-        resolver: &mut dyn SpanResolver<Sp>,
+        w: &mut impl WriteColor,
+        style: &mut impl Stylesheet,
+        resolver: &mut impl SpanResolver<Sp>,
     ) -> io::Result<()> {
         let max_line_no = self
             .body

@@ -4,7 +4,7 @@ use crate::{Annotation, DebugAndDisplay, Message, Slice};
 pub enum Snippet<'a, Sp> {
     Title {
         message: Message<'a>,
-        code: Option<&'a dyn DebugAndDisplay>,
+        code: Option<&'a str>,
     },
     AnnotatedSlice {
         slice: Slice<'a, Sp>,
